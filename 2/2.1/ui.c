@@ -37,7 +37,46 @@ static int read_number(int min, int max) {
     }
 }
 
+static void read_optional_text(char text[], int size) {
+    char input[MAX_OPTIONAL_TEXT_LENGTH];
+
+    read_line(input, size);
+
+    if (input[0] == '\0') {
+        return;
+    }
+
+    if (strcmp(input, "0") == 0) {
+        text[0] = '\0';
+        return;
+    }
+
+    strcpy(text, input);
+}
+
+static int read_optional_count(int max, int *count) {
+    char input[100];
+    int number;
+    char extra_character;
+
+    while (1) {
+        read_line(input, sizeof(input));
+
+        if (input[0] == '\0') {
+            return 0;
+        }
+
+        if (sscanf(input, "%d %c", &number, &extra_character) == 1 && number >= 0 && number <= max) {
+            *count = number;
+            return 1;
+        }
+
+        printf("Введите число от 0 до %d или нажмите Enter: ", max);
+    }
+}
+
 MenuChoice show_menu(void) {
+    printf("\n----------------\n");
     printf("\nТелефонная книга\n\n");
     printf("1. Показать контакты\n");
     printf("2. Добавить контакт\n");
@@ -75,17 +114,17 @@ Contact input_contact(void) {
         }
     } while (contact.first_name[0] == '\0');
 
-    printf("Отчество: ");
-    read_line(contact.middle_name, sizeof(contact.middle_name));
+    printf("Отчество (Enter или 0 — пропустить): ");
+    read_optional_text(contact.middle_name, sizeof(contact.middle_name));
 
-    printf("Место работы: ");
-    read_line(contact.workplace, sizeof(contact.workplace));
+    printf("Место работы (Enter или 0 — пропустить): ");
+    read_optional_text(contact.workplace, sizeof(contact.workplace));
 
-    printf("Должность: ");
-    read_line(contact.position, sizeof(contact.position));
+    printf("Должность (Enter или 0 — пропустить): ");
+    read_optional_text(contact.position, sizeof(contact.position));
 
-    printf("Количество телефонов (0-%d): ", MAX_PHONES);
-    contact.phone_count = read_number(0, MAX_PHONES);
+    printf("Количество телефонов (0-%d, Enter — пропустить): ", MAX_PHONES);
+    read_optional_count(MAX_PHONES, &contact.phone_count);
 
     for (int i = 0; i < contact.phone_count; i++) {
         do {
@@ -101,8 +140,8 @@ Contact input_contact(void) {
         } while (contact.phones[i][0] == '\0');
     }
 
-    printf("Количество адресов электронной почты (0-%d): ", MAX_EMAILS);
-    contact.email_count = read_number(0, MAX_EMAILS);
+    printf("Количество адресов электронной почты (0-%d, Enter — пропустить): ", MAX_EMAILS);
+    read_optional_count(MAX_EMAILS, &contact.email_count);
 
     for (int i = 0; i < contact.email_count; i++) {
         do {
@@ -118,8 +157,8 @@ Contact input_contact(void) {
         } while (contact.emails[i][0] == '\0');
     }
 
-    printf("Количество ссылок на социальные сети (0-%d): ", MAX_SOCIAL_LINKS);
-    contact.social_link_count = read_number(0, MAX_SOCIAL_LINKS);
+    printf("Количество ссылок на социальные сети (0-%d, Enter — пропустить): ", MAX_SOCIAL_LINKS);
+    read_optional_count(MAX_SOCIAL_LINKS, &contact.social_link_count);
 
     for (int i = 0; i < contact.social_link_count; i++) {
         do {
@@ -135,8 +174,8 @@ Contact input_contact(void) {
         } while (contact.social_links[i][0] == '\0');
     }
 
-    printf("Количество профилей в мессенджерах (0-%d): ", MAX_MESSENGER_PROFILES);
-    contact.messenger_profile_count = read_number(0, MAX_MESSENGER_PROFILES);
+    printf("Количество профилей в мессенджерах (0-%d, Enter — пропустить): ", MAX_MESSENGER_PROFILES);
+    read_optional_count(MAX_MESSENGER_PROFILES, &contact.messenger_profile_count);
 
     for (int i = 0; i < contact.messenger_profile_count; i++) {
         do {
@@ -305,33 +344,35 @@ Contact input_contact_changes(Contact contact) {
                 break;
 
             case 3:
-                printf("Новое отчество (Enter — удалить): ");
-                read_line(
+                printf("Новое отчество (Enter — оставить, 0 — удалить): ");
+                read_optional_text(
                     contact.middle_name,
                     sizeof(contact.middle_name)
                 );
                 break;
 
             case 4:
-                printf("Новое место работы (Enter — удалить): ");
-                read_line(
+                printf("Новое место работы (Enter — оставить, 0 — удалить): ");
+                read_optional_text(
                     contact.workplace,
                     sizeof(contact.workplace)
                 );
                 break;
 
             case 5:
-                printf("Новая должность (Enter — удалить): ");
-                read_line(
+                printf("Новая должность (Enter — оставить, 0 — удалить): ");
+                read_optional_text(
                     contact.position,
                     sizeof(contact.position)
                 );
                 break;
 
             case 6:
-                printf("Новое количество телефонов (0-%d): ", MAX_PHONES);
+                printf("Новое количество телефонов (0-%d, Enter — оставить): ", MAX_PHONES);
 
-                contact.phone_count = read_number(0, MAX_PHONES);
+                if (!read_optional_count(MAX_PHONES, &contact.phone_count)) {
+                    break;
+                }
 
                 for (int i = 0; i < contact.phone_count; i++) {
                     do {
@@ -351,11 +392,13 @@ Contact input_contact_changes(Contact contact) {
 
             case 7:
                 printf(
-                    "Новое количество адресов электронной почты (0-%d): ",
+                    "Новое количество адресов электронной почты (0-%d, Enter — оставить): ",
                     MAX_EMAILS
                 );
 
-                contact.email_count = read_number(0, MAX_EMAILS);
+                if (!read_optional_count(MAX_EMAILS, &contact.email_count)) {
+                    break;
+                }
 
                 for (int i = 0; i < contact.email_count; i++) {
                     do {
@@ -377,11 +420,13 @@ Contact input_contact_changes(Contact contact) {
 
             case 8:
                 printf(
-                    "Новое количество ссылок на социальные сети (0-%d): ",
+                    "Новое количество ссылок на социальные сети (0-%d, Enter — оставить): ",
                     MAX_SOCIAL_LINKS
                 );
 
-                contact.social_link_count = read_number(0, MAX_SOCIAL_LINKS);
+                if (!read_optional_count(MAX_SOCIAL_LINKS, &contact.social_link_count)) {
+                    break;
+                }
 
                 for (int i = 0; i < contact.social_link_count; i++) {
                     do {
@@ -401,11 +446,13 @@ Contact input_contact_changes(Contact contact) {
 
             case 9:
                 printf(
-                    "Новое количество профилей в мессенджерах (0-%d): ",
+                    "Новое количество профилей в мессенджерах (0-%d, Enter — оставить): ",
                     MAX_MESSENGER_PROFILES
                 );
 
-                contact.messenger_profile_count = read_number(0, MAX_MESSENGER_PROFILES);
+                if (!read_optional_count(MAX_MESSENGER_PROFILES, &contact.messenger_profile_count)) {
+                    break;
+                }
 
                 for (int i = 0; i < contact.messenger_profile_count; i++) {
                     do {
