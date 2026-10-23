@@ -1,0 +1,5 @@
+*.o
+*.a
+*.lib
+*.exe
+2/2.1/phonebook
