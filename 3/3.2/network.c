@@ -31,9 +31,37 @@ void ipv4_to_string(uint32_t address, char output[IPV4_STRING_SIZE]) {
     snprintf(output, IPV4_STRING_SIZE, "%u.%u.%u.%u", b1, b2, b3, b4);
 }
 
+static int is_valid_subnet_mask(uint32_t mask) {
+    int zero_found = 0;
+
+    for (int bit = IPV4_BIT_COUNT - 1; bit >= 0; bit--) {
+        int current_bit = (mask >> bit) & 1;
+
+        if (current_bit == 0) {
+            zero_found = 1;
+        } else if (zero_found) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 int parse_subnet_mask(const char text[], uint32_t *mask) {
     if (text[0] != '/') {
-        return parse_ipv4(text, mask);
+        uint32_t parsed_mask;
+
+        if (!parse_ipv4(text, &parsed_mask)) {
+            return 0;
+        }
+
+        if (!is_valid_subnet_mask(parsed_mask)) {
+            return 0;
+        }
+
+        *mask = parsed_mask;
+
+        return 1;
     }
 
     char *end;
