@@ -5,4 +5,5 @@
 
 Сборка: `make`  
 Запуск: `./network_simulator <шлюз> <маска> <количество>`  
+Тесты: `make test`  
 Очистка: `make clean`

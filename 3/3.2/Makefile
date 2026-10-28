@@ -4,6 +4,10 @@ CFLAGS = -std=c11 -Wall -Wextra -Wpedantic
 TARGET = network_simulator
 OBJECTS = main.o network.o ui.o
 
+UNITY_DIR = ../../third_party/unity
+TEST_TARGET = tests/test_network
+TEST_SOURCES = tests/test_network.c network.c $(UNITY_DIR)/unity.c
+
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
@@ -18,7 +22,13 @@ network.o: network.c network.h
 ui.o: ui.c ui.h network.h
 	$(CC) $(CFLAGS) -c ui.c
 
-clean:
-	rm -f $(OBJECTS) $(TARGET)
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
 
-.PHONY: all clean
+$(TEST_TARGET): $(TEST_SOURCES) network.h
+	$(CC) $(CFLAGS) -I. -I$(UNITY_DIR) $(TEST_SOURCES) -o $(TEST_TARGET)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET) $(TEST_TARGET)
+
+.PHONY: all test clean
